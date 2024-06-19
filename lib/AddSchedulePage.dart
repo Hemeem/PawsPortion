@@ -1,26 +1,47 @@
 import 'package:flutter/material.dart';
+import 'package:pawsportion/ScheduleItem.dart';
+
+const String DELETE_SIGNAL = "DELETE"; // Define a constant signal for deletion
 
 class AddSchedulePage extends StatefulWidget {
+  final ScheduleItem? schedule;
+
+  AddSchedulePage({this.schedule});
+
   @override
   _AddSchedulePageState createState() => _AddSchedulePageState();
 }
 
 class _AddSchedulePageState extends State<AddSchedulePage> {
-  final List<String> _hours =
-      List.generate(24, (index) => index.toString().padLeft(2, '0'));
-  final List<String> _minutes =
-      List.generate(60, (index) => index.toString().padLeft(2, '0'));
-  int _selectedHour = 7;
-  int _selectedMinute = 0;
-  int _portions = 15;
-  List<bool> _isSelected = List.generate(7, (index) => false);
+  late int _selectedHour;
+  late int _selectedMinute;
+  late int _portions;
+  late List<bool> _isSelected;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.schedule != null) {
+      // Editing an existing schedule
+      _selectedHour = int.parse(widget.schedule!.time.split(':')[0]);
+      _selectedMinute = int.parse(widget.schedule!.time.split(':')[1]);
+      _portions = widget.schedule!.portions;
+      _isSelected = List.from(widget.schedule!.repeatDays); // Use the existing repeatDays
+    } else {
+      // Adding a new schedule
+      _selectedHour = 7;
+      _selectedMinute = 0;
+      _portions = 15;
+      _isSelected = List.generate(7, (index) => false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          'Add Schedule',
+          widget.schedule != null ? 'Edit Schedule' : 'Add Schedule',
           style: TextStyle(color: Colors.black),
         ),
         centerTitle: true,
@@ -29,15 +50,21 @@ class _AddSchedulePageState extends State<AddSchedulePage> {
         leading: IconButton(
           icon: Icon(Icons.close),
           onPressed: () {
-            Navigator.pop(context);
+            Navigator.pop(context, null); // Return null to indicate cancel action
           },
         ),
         actions: [
+          if (widget.schedule != null) // Show delete icon only when editing
+            IconButton(
+              icon: Icon(Icons.delete, color: Colors.red),
+              onPressed: () {
+                _showDeleteConfirmationDialog(context);
+              },
+            ),
           IconButton(
             icon: Icon(Icons.check),
             onPressed: () {
-              // Save schedule logic
-              Navigator.pop(context);
+              _updateSchedule(context);
             },
           ),
         ],
@@ -64,21 +91,20 @@ class _AddSchedulePageState extends State<AddSchedulePage> {
                                 _selectedHour = index;
                               });
                             },
+                            controller: FixedExtentScrollController(initialItem: _selectedHour),
                             childDelegate: ListWheelChildBuilderDelegate(
                               builder: (context, index) {
                                 return Center(
                                   child: Text(
-                                    _hours[index],
+                                    index.toString().padLeft(2, '0'),
                                     style: TextStyle(
                                       fontSize: 24,
-                                      color: _selectedHour == index
-                                          ? Colors.black
-                                          : Colors.grey,
+                                      color: _selectedHour == index ? Colors.black : Colors.grey,
                                     ),
                                   ),
                                 );
                               },
-                              childCount: _hours.length,
+                              childCount: 24,
                             ),
                           ),
                         ),
@@ -101,21 +127,20 @@ class _AddSchedulePageState extends State<AddSchedulePage> {
                                 _selectedMinute = index;
                               });
                             },
+                            controller: FixedExtentScrollController(initialItem: _selectedMinute),
                             childDelegate: ListWheelChildBuilderDelegate(
                               builder: (context, index) {
                                 return Center(
                                   child: Text(
-                                    _minutes[index],
+                                    index.toString().padLeft(2, '0'),
                                     style: TextStyle(
                                       fontSize: 24,
-                                      color: _selectedMinute == index
-                                          ? Colors.black
-                                          : Colors.grey,
+                                      color: _selectedMinute == index ? Colors.black : Colors.grey,
                                     ),
                                   ),
                                 );
                               },
-                              childCount: _minutes.length,
+                              childCount: 60,
                             ),
                           ),
                         ),
@@ -142,29 +167,29 @@ class _AddSchedulePageState extends State<AddSchedulePage> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          _buildChoiceChip(0, 'Monday'),
+                          _buildChoiceChip(0, 'Mon'),
                           SizedBox(width: 45),
-                          _buildChoiceChip(1, 'Tuesday'),
+                          _buildChoiceChip(1, 'Tue'),
                         ],
                       ),
                       SizedBox(height: 10),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          _buildChoiceChip(2, 'Wednesday'),
+                          _buildChoiceChip(2, 'Wed'),
                           SizedBox(width: 40),
-                          _buildChoiceChip(3, 'Thursday'),
+                          _buildChoiceChip(3, 'Thu'),
                           SizedBox(width: 40),
-                          _buildChoiceChip(4, 'Friday'),
+                          _buildChoiceChip(4, 'Fri'),
                         ],
                       ),
                       SizedBox(height: 10),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          _buildChoiceChip(5, 'Saturday'),
+                          _buildChoiceChip(5, 'Sat'),
                           SizedBox(width: 45),
-                          _buildChoiceChip(6, 'Sunday'),
+                          _buildChoiceChip(6, 'Sun'),
                         ],
                       ),
                     ],
@@ -182,7 +207,6 @@ class _AddSchedulePageState extends State<AddSchedulePage> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  // Wrapped the content with a Column widget
                   Text('Portion(s)', style: TextStyle(fontSize: 20)),
                   SizedBox(height: 25),
                   Row(
@@ -190,11 +214,9 @@ class _AddSchedulePageState extends State<AddSchedulePage> {
                     children: [
                       SizedBox(
                         width: 80,
-                        height:
-                            70, // Menambahkan height untuk menyamakan tinggi dengan tombol
+                        height: 70,
                         child: IconButton(
-                          icon: Icon(Icons.remove_circle,
-                              color: Colors.red, size: 60),
+                          icon: Icon(Icons.remove_circle, color: Colors.red, size: 60),
                           onPressed: () {
                             setState(() {
                               if (_portions > 1) _portions--;
@@ -208,10 +230,7 @@ class _AddSchedulePageState extends State<AddSchedulePage> {
                           borderRadius: BorderRadius.circular(10),
                           border: Border.all(color: Colors.black),
                         ),
-                        padding: EdgeInsets.symmetric(
-                            vertical: 20,
-                            horizontal:
-                                20), // Tetapkan padding untuk kotak porsi
+                        padding: EdgeInsets.symmetric(vertical: 20, horizontal: 20),
                         child: Center(
                           child: Text(
                             _portions.toString(),
@@ -221,11 +240,9 @@ class _AddSchedulePageState extends State<AddSchedulePage> {
                       ),
                       SizedBox(
                         width: 80,
-                        height:
-                            70, // Menambahkan height untuk menyamakan tinggi dengan tombol
+                        height: 70,
                         child: IconButton(
-                          icon: Icon(Icons.add_circle,
-                              color: Colors.green, size: 60),
+                          icon: Icon(Icons.add_circle, color: Colors.green, size: 60),
                           onPressed: () {
                             setState(() {
                               _portions++;
@@ -235,10 +252,8 @@ class _AddSchedulePageState extends State<AddSchedulePage> {
                       ),
                     ],
                   ),
-
                   SizedBox(height: 10),
-                  Text('1 Portion = 10g',
-                      style: TextStyle(fontSize: 17, color: Colors.grey)),
+                  Text('1 Portion = 10g', style: TextStyle(fontSize: 17, color: Colors.grey)),
                   SizedBox(height: 18),
                 ],
               ),
@@ -259,6 +274,45 @@ class _AddSchedulePageState extends State<AddSchedulePage> {
         });
       },
       selectedColor: Colors.blue,
+    );
+  }
+
+  void _updateSchedule(BuildContext context) {
+    // Create or update the schedule
+    final updatedSchedule = ScheduleItem(
+      time: '${_selectedHour.toString().padLeft(2, '0')}:${_selectedMinute.toString().padLeft(2, '0')}',
+      portions: _portions,
+      enabled: widget.schedule?.enabled ?? true, // Preserve the enabled state if editing
+      repeatDays: _isSelected,
+    );
+    // Pass the updated schedule back to the previous screen
+    Navigator.pop(context, updatedSchedule);
+  }
+
+  void _showDeleteConfirmationDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Delete Schedule'),
+          content: Text('Are you sure you want to delete this schedule?'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context); // Close the dialog
+              },
+              child: Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context); // Close the dialog
+                Navigator.pop(context, DELETE_SIGNAL); // Return the delete signal to indicate deletion
+              },
+              child: Text('Delete', style: TextStyle(color: Colors.red)),
+            ),
+          ],
+        );
+      },
     );
   }
 }

@@ -1,6 +1,5 @@
-import 'dart:math';
-
 import 'package:flutter/material.dart';
+import 'package:pawsportion/Notifications.dart';
 import 'package:pawsportion/widget/FeedNotification.dart';
 import 'package:pawsportion/widget/ManualFeedButton.dart';
 
@@ -10,8 +9,9 @@ class MealPage extends StatefulWidget {
 }
 
 class _MealPageState extends State<MealPage> {
-  int portion = 12;
-  int _selectedIndex = 0;
+  int portion = 1; // Ensure starting portion is at least 1
+  List<String> _notifications = [];
+  
 
   void _incrementPortion() {
     setState(() {
@@ -21,14 +21,17 @@ class _MealPageState extends State<MealPage> {
 
   void _decrementPortion() {
     setState(() {
-      if (portion > 0) portion--;
+      if (portion > 1) portion--; // Prevent portion from going below 1
     });
   }
 
-  void _onNavBarTapped(int index) {
-    setState(() {
-      _selectedIndex = index;
-    });
+  void _viewNotifications() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => NotificationsPage(notifications: _notifications),
+      ),
+    );
   }
 
   @override
@@ -42,6 +45,12 @@ class _MealPageState extends State<MealPage> {
         centerTitle: true,
         backgroundColor: Color(0xFFD79A3D),
         iconTheme: IconThemeData(color: Colors.black),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.notifications),
+            onPressed: _viewNotifications,
+          ),
+        ],
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -63,30 +72,26 @@ class _MealPageState extends State<MealPage> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     IconButton(
-                      icon: Icon(Icons.remove_circle,
-                          color: Colors.red, size: 50),
+                      icon: Icon(Icons.remove_circle, color: Colors.red, size: 50),
                       onPressed: _decrementPortion,
                     ),
                     SizedBox(width: 30),
                     Container(
                       width: 100,
-                      padding:
-                          EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                      padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                       decoration: BoxDecoration(
                         border: Border.all(color: Colors.grey, width: 2),
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: Text(
                         '$portion',
-                        style: TextStyle(
-                            fontSize: 40, fontWeight: FontWeight.bold),
+                        style: TextStyle(fontSize: 40, fontWeight: FontWeight.bold),
                         textAlign: TextAlign.center,
                       ),
                     ),
                     SizedBox(width: 20),
                     IconButton(
-                      icon:
-                          Icon(Icons.add_circle, color: Colors.green, size: 50),
+                      icon: Icon(Icons.add_circle, color: Colors.green, size: 50),
                       onPressed: _incrementPortion,
                     ),
                   ],
@@ -99,7 +104,7 @@ class _MealPageState extends State<MealPage> {
               ],
             ),
             SizedBox(height: 80),
-            ManualFeedButton(),
+            ManualFeedButton(portion: portion), // Pass portion to the button
           ],
         ),
       ),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:pawsportion/ScheduleItem.dart';
 
 class ScheduleTile extends StatelessWidget {
   final ScheduleItem schedule;
@@ -24,13 +25,14 @@ class ScheduleTile extends StatelessWidget {
               Text(
                 schedule.time,
                 style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white),
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
               ),
               Text(
-                'Daily | ${schedule.portions} Portions',
-                style: TextStyle(fontSize: 16, color: Colors.white),
+                '${_getRepeatDays()} | ${schedule.portions} Portions',
+                style: TextStyle(fontSize: 15, color: Colors.white),
               ),
             ],
           ),
@@ -49,13 +51,21 @@ class ScheduleTile extends StatelessWidget {
       ),
     );
   }
-}
 
-class ScheduleItem {
-  String time;
-  int portions;
-  bool enabled;
+  String _getRepeatDays() {
+    List<String> days = [];
+    List<String> dayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
-  ScheduleItem(
-      {required this.time, required this.portions, required this.enabled});
+    for (int i = 0; i < schedule.repeatDays.length; i++) {
+      if (schedule.repeatDays[i]) {
+        days.add(dayNames[i]);
+      }
+    }
+
+    if (days.length == 7) {
+      return 'Daily';
+    } else {
+      return days.join(', ');
+    }
+  }
 }
