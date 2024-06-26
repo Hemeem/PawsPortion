@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:dots_indicator/dots_indicator.dart';
-import 'mealpage.dart'; // Gantikan dengan lokasi file MealPage jika diperlukan
+import 'package:pawsportion/ConnnectDevice.dart';
+import 'package:pawsportion/main.dart';
+import 'mealpage.dart'; // Replace with the actual path if necessary
 
 class OnboardingPage extends StatefulWidget {
   @override
@@ -17,8 +19,8 @@ class _OnboardingPageState extends State<OnboardingPage> {
     });
   }
 
-  void _onSkipPressed() {
-    // Implementasi aksi setelah tombol Skip ditekan
+ void _onSkipPressed() {
+    _navigateToConnectDevicePage(context);
   }
 
   void _onNextPressed() {
@@ -28,18 +30,19 @@ class _OnboardingPageState extends State<OnboardingPage> {
         curve: Curves.easeInOut,
       );
     } else {
-      _navigateToMealPage(context); // Navigasi ke MealPage
+      _navigateToConnectDevicePage(context);
     }
   }
 
-  void _navigateToMealPage(BuildContext context) {
-    Navigator.push(
+  void _navigateToConnectDevicePage(BuildContext context) {
+    Navigator.pushReplacement(
       context,
       MaterialPageRoute(
-        builder: (context) => MealPage(),
-      ),  
+        builder: (context) => WelcomeDevicePage(),
+      ),
     );
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -58,8 +61,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
               OnboardingScreen(
                 imageAsset: 'assets/onboarding2.jpg',
                 title: 'Set Feeding Schedule',
-                description:
-                    'Create and customize feeding schedules for your pets.',
+                description: 'Create and customize feeding schedules for your pets.',
               ),
               OnboardingScreen(
                 imageAsset: 'assets/onboarding3.jpg',
@@ -95,8 +97,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
                     ElevatedButton(
                       onPressed: _onNextPressed,
                       style: ButtonStyle(
-                        backgroundColor:
-                            MaterialStateProperty.all<Color>(Color(0xFFD79A3D)),
+                        backgroundColor: MaterialStateProperty.all<Color>(Color(0xFFD79A3D)),
                       ),
                       child: Text(
                         _currentPage < 2 ? 'Next' : 'Get Started',

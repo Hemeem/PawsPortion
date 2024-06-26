@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:pawsportion/ScheduleItem.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'package:uuid/uuid.dart';
 
 const String DELETE_SIGNAL = "DELETE"; // Define a constant signal for deletion
 
@@ -277,42 +280,65 @@ class _AddSchedulePageState extends State<AddSchedulePage> {
     );
   }
 
-  void _updateSchedule(BuildContext context) {
-    // Create or update the schedule
+   void _updateSchedule(BuildContext context) async {
     final updatedSchedule = ScheduleItem(
+      id: widget.schedule?.id ?? Uuid().v4(),
       time: '${_selectedHour.toString().padLeft(2, '0')}:${_selectedMinute.toString().padLeft(2, '0')}',
       portions: _portions,
-      enabled: widget.schedule?.enabled ?? true, // Preserve the enabled state if editing
+      enabled: widget.schedule?.enabled ?? true,
       repeatDays: _isSelected,
     );
-    // Pass the updated schedule back to the previous screen
-    Navigator.pop(context, updatedSchedule);
+
+      final url = widget.schedule == null
+        ? Uri.https('pawsportion-0-default-rtdb.firebaseio.com', 'schedules-list.json')
+        : Uri.https('pawsportion-0-default-rtdb.firebaseio.com', 'schedules-list/${updatedSchedule.id}.json');
+    
+    final response = await http.post(
+      url,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: json.encode({
+        'id': updatedSchedule.id,
+        'time': updatedSchedule.time,
+        'portions': updatedSchedule.portions,
+        'enabled': updatedSchedule.enabled,
+        'repeatDays': updatedSchedule.repeatDays,
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      print('Schedule added successfully: ${response.body}');
+      Navigator.pop(context, updatedSchedule);
+    } else {
+      print('Failed to save schedule: ${response.statusCode} - ${response.body}');
+      // Optionally, show an error message to the user
+    }
   }
 
-  void _showDeleteConfirmationDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text('Delete Schedule'),
-          content: Text('Are you sure you want to delete this schedule?'),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context); // Close the dialog
-              },
-              child: Text('Cancel'),
-            ),
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context); // Close the dialog
-                Navigator.pop(context, DELETE_SIGNAL); // Return the delete signal to indicate deletion
-              },
-              child: Text('Delete', style: TextStyle(color: Colors.red)),
-            ),
-          ],
-        );
-      },
-    );
-  }
-}
+ void _showDeleteConfirmationDialog(BuildContext context) {
+  showDialog(
+    context: context,
+    builder: (context) {
+      return AlertDialog(
+        title: Text('Delete Schedule'),
+        content: Text('Are you sure you want to delete this schedule?'),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context); // Close the dialog
+            },
+            child: Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context, DELETE_SIGNAL); // Signal to delete the schedule
+              Navigator.pop(context, DELETE_SIGNAL); // Return to the previous screen
+            },
+            child: Text('Delete', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      );
+    },
+  );
+}}

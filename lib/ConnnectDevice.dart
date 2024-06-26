@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:pawsportion/main.dart';
 import 'package:wifi_iot/wifi_iot.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:wifi_iot/wifi_iot.dart';
 
 
 class WelcomeDevicePage extends StatelessWidget {
@@ -10,7 +11,7 @@ class WelcomeDevicePage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text('PawsPortion Feeder'),
-        centerTitle: true,                                                                                                                                                                                         
+        centerTitle: true,
         actions: [
           IconButton(
             icon: Icon(Icons.add),
