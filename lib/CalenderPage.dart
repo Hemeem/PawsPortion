@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 
-class LogPage extends StatelessWidget {
-  const LogPage({Key? key});
+class CalenderPage extends StatelessWidget {
+  const CalenderPage({Key? key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          'Log',
+          'Calender',
           style: TextStyle(color: Colors.black),
         ),
         centerTitle: true,

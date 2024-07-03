@@ -13,10 +13,26 @@ class SchedulePage extends StatefulWidget {
 
 class _SchedulePageState extends State<SchedulePage> {
   final List<ScheduleItem> _schedules = [
-    ScheduleItem(time: '07:00', portions: 15, enabled: true, repeatDays: List.generate(7, (index) => true)),
-    ScheduleItem(time: '12:00', portions: 15, enabled: true, repeatDays: List.generate(7, (index) => true)),
-    ScheduleItem(time: '16:00', portions: 15, enabled: false, repeatDays: List.generate(7, (index) => true)),
-    ScheduleItem(time: '20:00', portions: 15, enabled: false, repeatDays: List.generate(7, (index) => true)),
+    ScheduleItem(
+        time: '07:00',
+        portions: 15,
+        enabled: true,
+        repeatDays: List.generate(7, (index) => true)),
+    ScheduleItem(
+        time: '12:00',
+        portions: 15,
+        enabled: true,
+        repeatDays: List.generate(7, (index) => true)),
+    ScheduleItem(
+        time: '16:00',
+        portions: 15,
+        enabled: false,
+        repeatDays: List.generate(7, (index) => true)),
+    ScheduleItem(
+        time: '20:00',
+        portions: 15,
+        enabled: false,
+        repeatDays: List.generate(7, (index) => true)),
   ];
 
   @override
@@ -54,7 +70,8 @@ class _SchedulePageState extends State<SchedulePage> {
     }
   }
 
-  Future<void> _navigateToEditSchedulePage(BuildContext context, int index) async {
+  Future<void> _navigateToEditSchedulePage(
+      BuildContext context, int index) async {
     final result = await Navigator.push(
       context,
       MaterialPageRoute(
