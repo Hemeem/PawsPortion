@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:pawsportion/main.dart';
 import 'package:wifi_iot/wifi_iot.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:wifi_iot/wifi_iot.dart';
+
 
 
 class WelcomeDevicePage extends StatelessWidget {

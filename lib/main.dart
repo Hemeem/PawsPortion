@@ -6,7 +6,7 @@ import 'schedulepage.dart' as schedule_page;
 import 'logpage.dart' as log_page;
 import 'bottom_navigation_bar.dart';  
  
-void main() {
+void main() {  
   runApp(PawsPortionFeederApp());
 }
 
