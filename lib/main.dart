@@ -4,7 +4,7 @@ import 'package:pawsportion/MealPage.dart';
 import 'package:pawsportion/onboarding_page.dart';
 import 'mealpage.dart' as meal_page;
 import 'schedulepage.dart' as schedule_page;
-import 'CalenderPage.dart' as log_page;
+import 'PawsCarePage.dart' as log_page;
 import 'bottom_navigation_bar.dart';
 
 void main() {
@@ -33,7 +33,7 @@ class _MealPageWithBottomNavState extends State<MealPageWithBottomNav> {
   final List<Widget> _pages = [
     meal_page.MealPage(),
     schedule_page.SchedulePage(),
-    log_page.CalenderPage(),
+    log_page.PawsCarePage(),
   ];
 
   void _onNavBarTapped(int index) {
