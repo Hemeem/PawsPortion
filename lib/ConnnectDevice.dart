@@ -4,13 +4,14 @@ import 'package:wifi_iot/wifi_iot.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 
+
 class WelcomeDevicePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text('PawsPortion Feeder'),
-        centerTitle: true,                                                                                                                                                                                         
+        centerTitle: true,
         actions: [
           IconButton(
             icon: Icon(Icons.add),

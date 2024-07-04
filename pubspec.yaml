@@ -36,7 +36,13 @@ dependencies:
   wifi_iot: ^0.3.19
   permission_handler: ^11.0.1
   web_socket_channel: ^2.4.0
+<<<<<<< HEAD
   intl: ^0.17.0
+=======
+  http: ^1.1.0
+  uuid: ^4.2.2
+  firebase_auth: ^4.16.0
+>>>>>>> 38cae59a8da769089290464d5a8d10d691475ed2
 
 
   # The following adds the Cupertino Icons font to your application.

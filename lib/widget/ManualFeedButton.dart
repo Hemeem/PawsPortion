@@ -3,7 +3,7 @@ import 'package:web_socket_channel/web_socket_channel.dart';
 import 'package:web_socket_channel/io.dart';
 
 class ManualFeedButton extends StatefulWidget {
-  final int portion; // Add portion parameter
+  final int portion;
 
   const ManualFeedButton({
     super.key,
@@ -20,13 +20,12 @@ class _ManualFeedButtonState extends State<ManualFeedButton> {
   @override
   void initState() {
     super.initState();
-    // Replace with your ESP32 IP address
-    channel = IOWebSocketChannel.connect('ws://192.168.4.1/ws');
+    channel = IOWebSocketChannel.connect('ws://192.168.4.1/ws'); // Pastikan alamat IP sesuai dengan IP ESP32
   }
 
   void _manualFeed() {
     final message = 'feed:${widget.portion}';
-    channel.sink.add(message); // Send portion as part of the message
+    channel.sink.add(message); // Kirim pesan dengan porsi
     print("Manual Feed Button clicked, message sent: $message"); // Debug print statement
   }
 

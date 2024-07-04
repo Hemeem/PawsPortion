@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:pawsportion/ConnnectDevice.dart';
-import 'package:pawsportion/MealPage.dart';
+// import 'package:pawsportion/ConnectDevice.dart';
 import 'package:pawsportion/onboarding_page.dart';
 import 'mealpage.dart' as meal_page;
 import 'schedulepage.dart' as schedule_page;
-import 'PawsCarePage.dart' as log_page;
-import 'bottom_navigation_bar.dart';
+import 'logpage.dart' as log_page;
+import 'bottom_navigation_bar.dart';  
+
 
 void main() {
   runApp(PawsPortionFeederApp());
@@ -17,7 +17,7 @@ class PawsPortionFeederApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       home:
-          MealPageWithBottomNav(), // Menggunakan MealPageWithBottomNav sebagai home
+          WelcomeDevicePage(), // Menggunakan MealPageWithBottomNav sebagai home
     );
   }
 }

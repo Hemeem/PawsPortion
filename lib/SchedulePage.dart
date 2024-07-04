@@ -1,17 +1,19 @@
 import 'package:flutter/material.dart';
-import 'package:pawsportion/AddSchedulePage.dart';
-import 'package:pawsportion/ScheduleItem.dart';
-import 'package:pawsportion/widget/ScheduleButton.dart';
+import 'package:http/http.dart' as http;
 import 'package:pawsportion/widget/ScheduleTile.dart';
+import 'dart:convert';
+import 'ScheduleItem.dart';
+import 'package:pawsportion/widget/ScheduleTile.dart';
+import 'package:pawsportion/widget/ScheduleButton.dart';
+import 'AddSchedulePage.dart';
 
 class SchedulePage extends StatefulWidget {
-  const SchedulePage({Key? key}) : super(key: key);
-
   @override
   _SchedulePageState createState() => _SchedulePageState();
 }
 
 class _SchedulePageState extends State<SchedulePage> {
+<<<<<<< HEAD
   final List<ScheduleItem> _schedules = [
     ScheduleItem(
         time: '07:00',
@@ -34,11 +36,60 @@ class _SchedulePageState extends State<SchedulePage> {
         enabled: false,
         repeatDays: List.generate(7, (index) => true)),
   ];
+=======
+  List<ScheduleItem> _schedules = [];
+  bool _isLoading = true;
+>>>>>>> 38cae59a8da769089290464d5a8d10d691475ed2
 
   @override
   void initState() {
     super.initState();
-    _sortSchedulesByTime(); // Sort schedules when the widget is initialized
+    _fetchSchedules();
+  }
+
+  Future<void> _fetchSchedules() async {
+    final url = Uri.https('pawsportion-0-default-rtdb.firebaseio.com', 'schedules-list.json');
+    final response = await http.get(url);
+
+    if (response.statusCode == 200) {
+      final Map<String, dynamic> data = json.decode(response.body);
+      final List<ScheduleItem> loadedSchedules = [];
+
+      data.forEach((key, value) {
+        if (value is Map<String, dynamic> && value.containsKey('time')) {
+          loadedSchedules.add(ScheduleItem(
+            id: value['id'] ?? key,
+            time: value['time'],
+            portions: value['portions'],
+            enabled: value['enabled'],
+            repeatDays: List<bool>.from(value['repeatDays']),
+          ));
+        } else if (value is Map<String, dynamic>) {
+          value.forEach((subKey, subValue) {
+            if (subValue is Map<String, dynamic> && subValue.containsKey('time')) {
+              loadedSchedules.add(ScheduleItem(
+                id: subValue['id'] ?? subKey,
+                time: subValue['time'],
+                portions: subValue['portions'],
+                enabled: subValue['enabled'],
+                repeatDays: List<bool>.from(subValue['repeatDays']),
+              ));
+            }
+          });
+        }
+      });
+
+      setState(() {
+        _schedules = loadedSchedules;
+        _sortSchedulesByTime();
+        _isLoading = false;
+      });
+    } else {
+      print('Failed to fetch schedules: ${response.statusCode}');
+      setState(() {
+        _isLoading = false;
+      });
+    }
   }
 
   void _sortSchedulesByTime() {
@@ -57,19 +108,28 @@ class _SchedulePageState extends State<SchedulePage> {
     });
   }
 
+  void _updateScheduleStatus(bool newValue, ScheduleItem schedule) {
+    setState(() {
+      schedule.enabled = newValue;
+    });
+    // Update status in Firebase (optional)
+  }
+
   Future<void> _navigateToAddSchedulePage(BuildContext context) async {
-    final newSchedule = await Navigator.push<ScheduleItem>(
+    final result = await Navigator.push(
       context,
       MaterialPageRoute(builder: (context) => AddSchedulePage()),
     );
-    if (newSchedule != null) {
+
+    if (result != null && result is ScheduleItem) {
       setState(() {
-        _schedules.add(newSchedule);
-        _sortSchedulesByTime(); // Sort schedules after adding a new one
+        _schedules.add(result);
+        _sortSchedulesByTime();
       });
     }
   }
 
+<<<<<<< HEAD
   Future<void> _navigateToEditSchedulePage(
       BuildContext context, int index) async {
     final result = await Navigator.push(
@@ -78,53 +138,65 @@ class _SchedulePageState extends State<SchedulePage> {
         builder: (context) => AddSchedulePage(schedule: _schedules[index]),
       ),
     );
+=======
+ Future<void> _navigateToEditSchedulePage(BuildContext context, ScheduleItem schedule) async {
+  final result = await Navigator.push(
+    context,
+    MaterialPageRoute(builder: (context) => AddSchedulePage(schedule: schedule)),
+  );
+>>>>>>> 38cae59a8da769089290464d5a8d10d691475ed2
 
-    if (result == DELETE_SIGNAL) {
+  if (result != null && result is ScheduleItem) {
+    setState(() {
+      final index = _schedules.indexWhere((s) => s.id == schedule.id);
+      if (index != -1) {
+        _schedules[index] = result;
+        _sortSchedulesByTime();
+      }
+    });
+     } else if (result == DELETE_SIGNAL) {
+    final url = Uri.https('pawsportion-0-default-rtdb.firebaseio.com', 'schedules-list/${schedule.id}.json');
+    final response = await http.delete(url);
+
+    if (response.statusCode == 200) {
       setState(() {
-        _schedules.removeAt(index);
+        _schedules.removeWhere((s) => s.id == schedule.id);
       });
-    } else if (result != null) {
-      setState(() {
-        _schedules[index] = result as ScheduleItem;
-        _sortSchedulesByTime(); // Sort schedules after editing
-      });
+    } else {
+      print('Failed to delete schedule: ${response.statusCode} - ${response.body}');
     }
   }
+}
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(
-          'Schedule',
-          style: TextStyle(color: Colors.black),
-        ),
-        centerTitle: true,
+        title: Text('Schedules'),
         backgroundColor: Color(0xFFD79A3D),
-        iconTheme: IconThemeData(color: Colors.black),
       ),
-      body: ListView.builder(
-        itemCount: _schedules.length,
-        itemBuilder: (context, index) {
-          return GestureDetector(
-            onTap: () => _navigateToEditSchedulePage(context, index),
-            child: ScheduleTile(
-              schedule: _schedules[index],
-              onChanged: (bool value) {
-                setState(() {
-                  _schedules[index].enabled = value;
-                });
+      body: _isLoading
+          ? Center(child: CircularProgressIndicator())
+          : ListView.builder(
+              itemCount: _schedules.length,
+              itemBuilder: (context, index) {
+                final schedule = _schedules[index];
+                return GestureDetector(
+                  onTap: () => _navigateToEditSchedulePage(context, schedule),
+                  child: ScheduleTile(
+                    schedule: schedule,
+                    onChanged: (newValue) {
+                      _updateScheduleStatus(newValue, schedule);
+                    },
+                  ),
+                );
               },
             ),
-          );
-        },
-      ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _navigateToAddSchedulePage(context),
         child: Icon(Icons.add),
         backgroundColor: Colors.green,
       ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
     );
   }
 }
