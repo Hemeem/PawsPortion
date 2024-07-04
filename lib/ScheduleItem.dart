@@ -22,4 +22,6 @@ class ScheduleItem {
       'repeatDays': repeatDays,
     };
   }
+
+  copyWith({required bool enabled}) {}
 }

@@ -3,8 +3,9 @@ import 'package:pawsportion/ScheduleItem.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:uuid/uuid.dart';
+import 'package:pawsportion/AuthService.dart';
 
-const String DELETE_SIGNAL = "DELETE"; 
+const String DELETE_SIGNAL = "DELETE";
 
 class AddSchedulePage extends StatefulWidget {
   final ScheduleItem? schedule;
@@ -119,7 +120,8 @@ class _AddSchedulePageState extends State<AddSchedulePage> {
     );
   }
 
-  Widget _buildTimeWheel(int initialItem, int itemCount, ValueChanged<int> onSelectedItemChanged) {
+  Widget _buildTimeWheel(
+      int initialItem, int itemCount, ValueChanged<int> onSelectedItemChanged) {
     return Expanded(
       child: ListWheelScrollView.useDelegate(
         itemExtent: 50,
@@ -248,25 +250,40 @@ class _AddSchedulePageState extends State<AddSchedulePage> {
             ],
           ),
           SizedBox(height: 10),
-          Text('1 Portion = 10g', style: TextStyle(fontSize: 17, color: Colors.grey)),
+          Text('1 Portion = 10g',
+              style: TextStyle(fontSize: 17, color: Colors.grey)),
           SizedBox(height: 18),
         ],
       ),
     );
   }
 
+final authService = AuthService();
+
 Future<void> _updateSchedule(BuildContext context) async {
   final updatedSchedule = ScheduleItem(
     id: widget.schedule?.id ?? Uuid().v4(),
-    time: '${_selectedHour.toString().padLeft(2, '0')}:${_selectedMinute.toString().padLeft(2, '0')}',
+    time:
+        '${_selectedHour.toString().padLeft(2, '0')}:${_selectedMinute.toString().padLeft(2, '0')}',
     portions: _portions,
     enabled: widget.schedule?.enabled ?? true,
     repeatDays: _isSelected,
   );
 
-  final url = widget.schedule == null
-      ? Uri.https('pawsportion-0-default-rtdb.firebaseio.com', 'schedules-list/${updatedSchedule.id}.json')
-      : Uri.https('pawsportion-0-default-rtdb.firebaseio.com', 'schedules-list/${updatedSchedule.id}.json');
+  final token = await authService.getToken();
+  if (token == null) {
+    print('Failed to get token');
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text('Failed to get token. Please try again.'),
+    ));
+    return;
+  }
+
+  final url = Uri.https(
+    'pawsportion-0-default-rtdb.firebaseio.com',
+    'schedules-list/${updatedSchedule.id}.json',
+    {'auth': token},
+  );
 
   final method = widget.schedule == null ? 'post' : 'put';
   final response = await (method == 'post' ? http.post : http.put)(
@@ -276,40 +293,66 @@ Future<void> _updateSchedule(BuildContext context) async {
   );
 
   if (response.statusCode == 200) {
+    print('Successfully saved schedule: ${updatedSchedule.toJson()}');
     Navigator.pop(context, updatedSchedule);
   } else {
     print('Failed to save schedule: ${response.statusCode} - ${response.body}');
   }
 }
 
+  Future<void> _deleteSchedule(BuildContext context) async {
+    if (widget.schedule != null) {
+      final token = await AuthService().getToken();
+      if (token == null) {
+        print('Failed to get token');
+        return;
+      }
 
-void _showDeleteConfirmationDialog(BuildContext context) {
-  showDialog(
-    context: context,
-    builder: (context) {
-      return AlertDialog(
-        title: Text('Delete Schedule'),
-        content: Text('Are you sure you want to delete this schedule?'),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-            },
-            child: Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context, DELETE_SIGNAL);
-              Navigator.pop(context, DELETE_SIGNAL);
-            },
-            child: Text('Delete', style: TextStyle(color: Colors.red)),
-          ),
-        ],
+      final url = Uri.https(
+        'pawsportion-0-default-rtdb.firebaseio.com',
+        'schedules-list/${widget.schedule!.id}.json',
+        {'auth': token},
       );
-    },
-  );
-}
 
+      final response = await http.delete(url);
+
+      if (response.statusCode == 200) {
+        print(
+            'Successfully deleted schedule: ${widget.schedule!.id}'); // Add this line for logging
+        Navigator.pop(context, DELETE_SIGNAL);
+      } else {
+        print(
+            'Failed to delete schedule: ${response.statusCode} - ${response.body}');
+      }
+    }
+  }
+
+  void _showDeleteConfirmationDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Delete Schedule'),
+          content: Text('Are you sure you want to delete this schedule?'),
+          actions: <Widget>[
+            TextButton(
+              child: Text('Cancel'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+            TextButton(
+              child: Text('Delete'),
+              onPressed: () {
+                Navigator.of(context).pop();
+                _deleteSchedule(context);
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
 }
 
 extension on ScheduleItem {

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:pawsportion/AuthService.dart';
 import 'package:pawsportion/widget/ScheduleTile.dart';
 import 'dart:convert';
 import 'ScheduleItem.dart';
@@ -22,13 +23,28 @@ class _SchedulePageState extends State<SchedulePage> {
     _fetchSchedules();
   }
 
-  Future<void> _fetchSchedules() async {
-    final url = Uri.https('pawsportion-0-default-rtdb.firebaseio.com', 'schedules-list.json');
+Future<void> _fetchSchedules() async {
+    final token = await AuthService().getToken();
+    if (token == null) {
+      print('Failed to get token');
+      setState(() {
+        _isLoading = false;
+      });
+      return;
+    }
+
+    final url = Uri.https(
+      'pawsportion-0-default-rtdb.firebaseio.com',
+      'schedules-list.json',
+      {'auth': token},
+    );
+
     final response = await http.get(url);
 
     if (response.statusCode == 200) {
       final Map<String, dynamic> data = json.decode(response.body);
       final List<ScheduleItem> loadedSchedules = [];
+      print('Fetched data: $data');
 
       data.forEach((key, value) {
         if (value is Map<String, dynamic> && value.containsKey('time')) {
@@ -104,35 +120,46 @@ class _SchedulePageState extends State<SchedulePage> {
     }
   }
 
- Future<void> _navigateToEditSchedulePage(BuildContext context, ScheduleItem schedule) async {
-  final result = await Navigator.push(
-    context,
-    MaterialPageRoute(builder: (context) => AddSchedulePage(schedule: schedule)),
-  );
+  Future<void> _navigateToEditSchedulePage(BuildContext context, ScheduleItem schedule) async {
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => AddSchedulePage(schedule: schedule)),
+    );
 
-  if (result != null && result is ScheduleItem) {
-    setState(() {
-      final index = _schedules.indexWhere((s) => s.id == schedule.id);
-      if (index != -1) {
-        _schedules[index] = result;
-        _sortSchedulesByTime();
-      }
-    });
-     } else if (result == DELETE_SIGNAL) {
-    final url = Uri.https('pawsportion-0-default-rtdb.firebaseio.com', 'schedules-list/${schedule.id}.json');
-    final response = await http.delete(url);
-
-    if (response.statusCode == 200) {
+    if (result != null && result is ScheduleItem) {
       setState(() {
-        _schedules.removeWhere((s) => s.id == schedule.id);
+        final index = _schedules.indexWhere((s) => s.id == schedule.id);
+        if (index != -1) {
+          _schedules[index] = result;
+          _sortSchedulesByTime();
+        }
       });
-    } else {
-      print('Failed to delete schedule: ${response.statusCode} - ${response.body}');
+    } else if (result == DELETE_SIGNAL) {
+      final token = await AuthService().getToken();
+      if (token == null) {
+        print('Failed to get token');
+        return;
+      }
+
+      final url = Uri.https(
+        'pawsportion-0-default-rtdb.firebaseio.com',
+        'schedules-list/${schedule.id}.json',
+        {'auth': token},
+      );
+
+      final response = await http.delete(url);
+
+      if (response.statusCode == 200) {
+        setState(() {
+          _schedules.removeWhere((s) => s.id == schedule.id);
+        });
+      } else {
+        print('Failed to delete schedule: ${response.statusCode} - ${response.body}');
+      }
     }
   }
-}
 
-  @override
+   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(

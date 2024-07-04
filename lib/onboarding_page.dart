@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:dots_indicator/dots_indicator.dart';
 import 'package:pawsportion/ConnnectDevice.dart';
+import 'package:pawsportion/LoginPage.dart';
 import 'package:pawsportion/main.dart';
 import 'mealpage.dart'; // Replace with the actual path if necessary
 
@@ -38,7 +39,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(
-        builder: (context) => WelcomeDevicePage(),
+        builder: (context) => LoginPage(),
       ),
     );
   }

@@ -38,7 +38,7 @@ class _BottomNavBarState extends State<BottomNavBar> {
         ),
         BottomNavigationBarItem(
           icon: Icon(Icons.list),
-          label: 'Log',
+          label: 'PawsCare',
         ),
       ],
     );
